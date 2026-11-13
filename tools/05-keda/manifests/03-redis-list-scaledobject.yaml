@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Namespace
+metadata: {name: keda-demo}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: redis, namespace: keda-demo}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: redis}}
+  template:
+    metadata: {labels: {app: redis}}
+    spec:
+      containers:
+        - {name: redis, image: redis:7.2-alpine, ports: [{containerPort: 6379}]}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: redis, namespace: keda-demo}
+spec:
+  selector: {app: redis}
+  ports: [{port: 6379}]
+---
+# Worker: pops one item from the list every 3 seconds (simulates slow work)
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: worker, namespace: keda-demo}
+spec:
+  selector: {matchLabels: {app: worker}}
+  template:
+    metadata: {labels: {app: worker}}
+    spec:
+      containers:
+        - name: worker
+          image: redis:7.2-alpine
+          command: ["sh","-c","while true; do item=$(redis-cli -h redis LPOP jobs); if [ -n \"$item\" ]; then echo processing $item; sleep 3; else sleep 1; fi; done"]
+          resources: {requests: {cpu: 20m, memory: 32Mi}}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: {name: worker-scaler, namespace: keda-demo}
+spec:
+  scaleTargetRef: {name: worker}
+  minReplicaCount: 0              # SCALE TO ZERO
+  maxReplicaCount: 10
+  pollingInterval: 5
+  cooldownPeriod: 30
+  triggers:
+    - type: redis
+      metadata:
+        address: redis.keda-demo.svc.cluster.local:6379
+        listName: jobs
+        listLength: "10"          # 1 pod per 10 queued items

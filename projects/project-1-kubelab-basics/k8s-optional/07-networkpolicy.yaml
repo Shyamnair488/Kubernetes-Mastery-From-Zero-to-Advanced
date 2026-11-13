@@ -1,0 +1,20 @@
+# Requires a policy-capable CNI (minikube start --cni=calico)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: db-allow-api-only, namespace: kubelab}
+spec:
+  podSelector: {matchLabels: {app: postgres}}
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{podSelector: {matchLabels: {app: kubelab-api}}}]
+      ports: [{protocol: TCP, port: 5432}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: api-allow-frontend-only, namespace: kubelab}
+spec:
+  podSelector: {matchLabels: {app: kubelab-api}}
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{podSelector: {matchLabels: {app: frontend}}}]
+      ports: [{protocol: TCP, port: 8080}]

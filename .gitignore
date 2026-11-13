@@ -1,0 +1,10 @@
+.terraform/
+*.tfstate*
+*.tfvars
+!*.tfvars.example
+*.pem
+*.key
+kubeconfig*
+.env
+.DS_Store
+*.tgz

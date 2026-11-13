@@ -1,0 +1,9 @@
+apiVersion: v2
+name: kubelab
+description: A production-style Helm chart for the KubeLab sample web app
+type: application
+version: 0.1.0          # chart version (bump when chart changes)
+appVersion: "1.0.0"     # app version (default image tag)
+keywords: [kubelab, demo, learning]
+maintainers:
+  - name: your-name

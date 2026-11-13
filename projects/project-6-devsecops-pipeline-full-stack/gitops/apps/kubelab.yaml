@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubelab
+  namespace: argocd
+  annotations: {argocd.argoproj.io/sync-wave: "1"}
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/<your-username>/k8s-mastery.git
+    targetRevision: main
+    path: tools/03-helm/kubelab-chart
+    helm:
+      releaseName: kubelab
+      valueFiles:
+        - ../../projects/project-6-devsecops-pipeline-full-stack/gitops/values/prod.yaml
+  destination: {server: https://kubernetes.default.svc, namespace: kubelab}
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true]

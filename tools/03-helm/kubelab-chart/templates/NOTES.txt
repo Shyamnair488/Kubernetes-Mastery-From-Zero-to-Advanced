@@ -1,0 +1,13 @@
+🎉 {{ .Chart.Name }} installed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+Access the app:
+{{- if .Values.ingress.enabled }}
+  http://{{ (index .Values.ingress.hosts 0).host }}
+{{- else if eq .Values.service.type "ClusterIP" }}
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "kubelab.fullname" . }} 8080:{{ .Values.service.port }}
+  then open http://localhost:8080
+{{- else }}
+  kubectl get svc -n {{ .Release.Namespace }} {{ include "kubelab.fullname" . }}
+{{- end }}
+
+Run tests:  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

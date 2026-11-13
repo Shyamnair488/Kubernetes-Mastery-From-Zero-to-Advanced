@@ -1,0 +1,65 @@
+# Copy to .github/workflows/ci.yml
+name: ci
+on:
+  push:
+    branches: [main]
+    paths: ["projects/project-6-devsecops-pipeline-full-stack/app/**"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write        # OIDC to AWS
+  contents: write        # commit updated image tag
+  security-events: write # upload SARIF
+
+env:
+  APP_DIR: projects/project-6-devsecops-pipeline-full-stack/app
+  VALUES_FILE: projects/project-6-devsecops-pipeline-full-stack/gitops/values/prod.yaml
+
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trivy repo scan (vulns, secrets, misconfig)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: ${{ env.APP_DIR }}
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build image (local, not pushed yet)
+        run: docker build -t app:${{ github.sha }} $APP_DIR
+
+      - name: Trivy image scan (gate)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: app:${{ github.sha }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Push to ECR
+        run: |
+          IMAGE=${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}
+          docker tag app:${{ github.sha }} $IMAGE:${{ github.sha }}
+          docker push $IMAGE:${{ github.sha }}
+
+      - name: Update image tag in GitOps values
+        run: |
+          sed -i "s|^  tag: .*|  tag: \"${{ github.sha }}\"|" $VALUES_FILE
+          git config user.name  "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git add $VALUES_FILE
+          git commit -m "ci: deploy ${{ github.sha }}" || echo "nothing to commit"
+          git push

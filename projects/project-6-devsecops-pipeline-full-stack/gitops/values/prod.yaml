@@ -1,0 +1,27 @@
+# Updated automatically by CI (image.tag). Used by ArgoCD with the kubelab chart.
+fullnameOverride: kubelab-web
+manageReplicas: false          # KEDA owns the replica count
+image:
+  repository: <account-id>.dkr.ecr.<region>.amazonaws.com/k8s-sample
+  tag: "initial"
+  pullPolicy: IfNotPresent
+containerPort: 8080
+service: {type: ClusterIP, port: 80, targetPort: 8080}
+probes: {path: /healthz, initialDelaySeconds: 5}
+env: {APP_ENV: prod}
+autoscaling: {enabled: false}      # KEDA owns scaling (it creates its own HPA)
+pdb: {enabled: true, minAvailable: 1}
+resources:
+  requests: {cpu: 250m, memory: 128Mi}
+  limits: {cpu: 500m, memory: 256Mi}
+topologySpread: true
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+  hosts:
+    - host: ""
+      paths: [{path: /, pathType: Prefix}]

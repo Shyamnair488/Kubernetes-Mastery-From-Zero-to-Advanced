@@ -1,0 +1,15 @@
+# Needs a Deployment named 'web' in namespace 'lab' (02-workloads/manifests/02-deployment.yaml)
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: {name: web-cron, namespace: lab}
+spec:
+  scaleTargetRef: {name: web}
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+    - type: cron
+      metadata:
+        timezone: Asia/Kolkata
+        start: 0 9 * * 1-5        # 09:00 Mon-Fri
+        end: 0 18 * * 1-5         # 18:00 Mon-Fri
+        desiredReplicas: "5"

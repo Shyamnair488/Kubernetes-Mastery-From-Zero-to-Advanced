@@ -1,0 +1,20 @@
+# Dedicated pool: only Pods that tolerate the taint land here.
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: dedicated
+spec:
+  template:
+    metadata:
+      labels: {pool: dedicated}
+    spec:
+      nodeClassRef: {group: karpenter.k8s.aws, kind: EC2NodeClass, name: default}
+      taints:
+        - {key: dedicated, value: "true", effect: NoSchedule}
+      requirements:
+        - {key: karpenter.sh/capacity-type, operator: In, values: ["on-demand"]}
+        - {key: karpenter.k8s.aws/instance-family, operator: In, values: ["m6i", "m7i"]}
+  limits: {cpu: "32"}
+  disruption:
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 5m

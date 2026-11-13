@@ -1,0 +1,23 @@
+# Requires AWS Load Balancer Controller. Backing Service is ClusterIP.
+apiVersion: v1
+kind: Service
+metadata: {name: sample-app-internal}
+spec:
+  type: ClusterIP
+  selector: {app: sample-app}
+  ports: [{port: 80, targetPort: 8080}]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sample-app
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - {path: /, pathType: Prefix, backend: {service: {name: sample-app-internal, port: {number: 80}}}}

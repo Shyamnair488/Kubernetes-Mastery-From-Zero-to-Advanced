@@ -1,0 +1,76 @@
+# -- Number of replicas (ignored when autoscaling.enabled)
+replicaCount: 2
+# -- Set false when KEDA/another controller owns the replica count (avoids GitOps fights)
+manageReplicas: true
+
+image:
+  # -- Container image repository
+  repository: nginx
+  # -- Image tag (defaults to Chart.appVersion if empty)
+  tag: "1.27"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}      # e.g. eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/app
+  name: ""
+
+# -- Plain env vars (also stored in a ConfigMap)
+env:
+  APP_ENV: dev
+  LOG_LEVEL: info
+
+podAnnotations: {}
+
+podSecurityContext:
+  seccompProfile: {type: RuntimeDefault}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities: {drop: ["ALL"]}
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+containerPort: 80
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: kubelab.local
+      paths:
+        - {path: /, pathType: Prefix}
+  tls: []
+
+resources:
+  requests: {cpu: 50m, memory: 64Mi}
+  limits: {cpu: 200m, memory: 128Mi}
+
+probes:
+  path: /
+  initialDelaySeconds: 3
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 60
+
+pdb:
+  enabled: false
+  minAvailable: 1
+
+# -- Spread pods across zones
+topologySpread: false
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

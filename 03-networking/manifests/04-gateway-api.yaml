@@ -1,0 +1,23 @@
+# Requires: kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.0/standard-install.yaml
+# and a Gateway controller (e.g. NGINX Gateway Fabric, Envoy Gateway, Istio, Cilium).
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata: {name: main-gw, namespace: lab}
+spec:
+  gatewayClassName: nginx
+  listeners:
+    - {name: http, port: 80, protocol: HTTP}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata: {name: shop-route, namespace: lab}
+spec:
+  parentRefs: [{name: main-gw}]
+  hostnames: ["shop.local"]
+  rules:
+    - matches: [{path: {type: PathPrefix, value: /api}}]
+      backendRefs: [{name: api, port: 80}]
+    - matches: [{path: {type: PathPrefix, value: /}}]
+      backendRefs:
+        - {name: web, port: 80, weight: 90}
+        - {name: shop, port: 80, weight: 10}   # canary 10%

@@ -1,0 +1,17 @@
+# INTENTIONALLY INSECURE - for `trivy config` practice only. Do not deploy to shared clusters.
+apiVersion: v1
+kind: Pod
+metadata: {name: insecure-pod}
+spec:
+  hostNetwork: true
+  containers:
+    - name: app
+      image: nginx:latest
+      securityContext:
+        privileged: true
+        runAsUser: 0
+        allowPrivilegeEscalation: true
+      volumeMounts: [{name: host, mountPath: /host}]
+  volumes:
+    - name: host
+      hostPath: {path: /}

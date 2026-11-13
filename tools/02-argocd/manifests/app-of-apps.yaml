@@ -1,0 +1,12 @@
+# Root application: watches a folder full of Application manifests
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: {name: root, namespace: argocd}
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/<your-username>/k8s-mastery.git
+    targetRevision: main
+    path: projects/project-3-argocd-gitops/gitops/apps
+  destination: {server: https://kubernetes.default.svc, namespace: argocd}
+  syncPolicy: {automated: {prune: true, selfHeal: true}}

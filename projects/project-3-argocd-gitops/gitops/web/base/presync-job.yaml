@@ -1,0 +1,14 @@
+# ArgoCD hook: runs BEFORE the sync (e.g. DB migration). Deleted after success.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: presync-check
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - {name: check, image: busybox:1.36, command: ["sh","-c","echo running pre-sync checks; sleep 3"]}

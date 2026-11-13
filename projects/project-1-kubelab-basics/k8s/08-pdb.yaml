@@ -1,0 +1,6 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: {name: kubelab-api, namespace: kubelab}
+spec:
+  minAvailable: 2
+  selector: {matchLabels: {app: kubelab-api}}

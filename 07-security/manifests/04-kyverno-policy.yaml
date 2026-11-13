@@ -1,0 +1,36 @@
+# Requires Kyverno: helm install kyverno kyverno/kyverno -n kyverno --create-namespace
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata: {name: disallow-latest-tag}
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-image-tag
+      match:
+        any:
+          - resources: {kinds: [Pod]}
+      validate:
+        message: "Images must use a pinned tag, not ':latest'."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata: {name: require-resource-limits}
+spec:
+  validationFailureAction: Audit
+  rules:
+    - name: limits-required
+      match:
+        any:
+          - resources: {kinds: [Pod]}
+      validate:
+        message: "CPU and memory limits are required."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  limits: {memory: "?*", cpu: "?*"}

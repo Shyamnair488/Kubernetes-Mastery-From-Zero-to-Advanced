@@ -1,0 +1,21 @@
+# EKS: attach an IRSA role (sqs:GetQueueAttributes) to the keda-operator ServiceAccount
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata: {name: aws-irsa, namespace: lab}
+spec:
+  podIdentity: {provider: aws}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: {name: sqs-worker, namespace: lab}
+spec:
+  scaleTargetRef: {name: sqs-worker}
+  minReplicaCount: 0
+  maxReplicaCount: 30
+  triggers:
+    - type: aws-sqs-queue
+      authenticationRef: {name: aws-irsa}
+      metadata:
+        queueURL: https://sqs.ap-south-1.amazonaws.com/123456789012/my-queue
+        queueLength: "5"
+        awsRegion: ap-south-1

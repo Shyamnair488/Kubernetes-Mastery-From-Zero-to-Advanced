@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: dev-sa, namespace: lab}
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: {name: pod-reader, namespace: lab}
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: {name: dev-sa-pod-reader, namespace: lab}
+subjects:
+  - {kind: ServiceAccount, name: dev-sa, namespace: lab}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: pod-reader}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: {name: node-viewer}
+rules:
+  - {apiGroups: [""], resources: ["nodes"], verbs: ["get", "list", "watch"]}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: {name: dev-sa-node-viewer}
+subjects:
+  - {kind: ServiceAccount, name: dev-sa, namespace: lab}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: node-viewer}
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: rbac-test, namespace: lab}
+spec:
+  serviceAccountName: dev-sa
+  containers:
+    - name: kubectl
+      image: bitnami/kubectl:latest
+      command: ["sleep","3600"]
+# kubectl exec -n lab rbac-test -- kubectl get pods         (allowed)
+# kubectl exec -n lab rbac-test -- kubectl get secrets      (Forbidden)

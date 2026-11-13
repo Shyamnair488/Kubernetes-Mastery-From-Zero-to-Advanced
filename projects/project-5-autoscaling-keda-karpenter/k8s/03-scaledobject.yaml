@@ -1,0 +1,19 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: {name: worker, namespace: autoscale-lab}
+spec:
+  scaleTargetRef: {name: worker}
+  minReplicaCount: 0
+  maxReplicaCount: 50
+  pollingInterval: 5
+  cooldownPeriod: 60
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown: {stabilizationWindowSeconds: 60}
+  triggers:
+    - type: redis
+      metadata:
+        address: redis.autoscale-lab.svc.cluster.local:6379
+        listName: jobs
+        listLength: "10"

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: worker, namespace: autoscale-lab}
+spec:
+  selector: {matchLabels: {app: worker}}
+  template:
+    metadata: {labels: {app: worker}}
+    spec:
+      terminationGracePeriodSeconds: 30
+      # Uncomment when using the dedicated Karpenter pool:
+      # nodeSelector: {pool: autoscale}
+      # tolerations: [{key: workload, value: autoscale, effect: NoSchedule}]
+      containers:
+        - name: worker
+          image: redis:7.2-alpine
+          command: ["sh","-c","while true; do item=$(redis-cli -h redis LPOP jobs); if [ -n \"$item\" ]; then echo done $item; sleep 5; else sleep 1; fi; done"]
+          resources:
+            requests: {cpu: 500m, memory: 256Mi}
+            limits: {cpu: 500m, memory: 256Mi}

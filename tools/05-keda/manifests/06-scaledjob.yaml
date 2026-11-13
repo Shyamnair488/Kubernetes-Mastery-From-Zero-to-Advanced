@@ -1,0 +1,21 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledJob
+metadata: {name: redis-job, namespace: keda-demo}
+spec:
+  jobTargetRef:
+    template:
+      spec:
+        restartPolicy: Never
+        containers:
+          - name: job
+            image: redis:7.2-alpine
+            command: ["sh","-c","item=$(redis-cli -h redis LPOP jobs); echo handled $item; sleep 5"]
+  pollingInterval: 10
+  maxReplicaCount: 20
+  successfulJobsHistoryLimit: 3
+  triggers:
+    - type: redis
+      metadata:
+        address: redis.keda-demo.svc.cluster.local:6379
+        listName: jobs
+        listLength: "1"

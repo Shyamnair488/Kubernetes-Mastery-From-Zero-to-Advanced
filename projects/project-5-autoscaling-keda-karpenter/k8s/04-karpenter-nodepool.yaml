@@ -1,0 +1,18 @@
+# Optional dedicated Spot pool for this lab. Requires EC2NodeClass "default" (tools/06-karpenter).
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata: {name: autoscale-pool}
+spec:
+  template:
+    metadata: {labels: {pool: autoscale}}
+    spec:
+      nodeClassRef: {group: karpenter.k8s.aws, kind: EC2NodeClass, name: default}
+      taints: [{key: workload, value: autoscale, effect: NoSchedule}]
+      requirements:
+        - {key: karpenter.sh/capacity-type, operator: In, values: ["spot", "on-demand"]}
+        - {key: karpenter.k8s.aws/instance-category, operator: In, values: ["c", "m"]}
+        - {key: karpenter.k8s.aws/instance-generation, operator: Gt, values: ["4"]}
+  limits: {cpu: "40"}
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 1m

@@ -1,0 +1,21 @@
+# Built-in (no webhook) policy: Deployments must have <= 10 replicas. K8s 1.30+
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata: {name: max-replicas}
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - {apiGroups: ["apps"], apiVersions: ["v1"], operations: ["CREATE","UPDATE"], resources: ["deployments"]}
+  validations:
+    - expression: "object.spec.replicas <= 10"
+      message: "replicas must be <= 10"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata: {name: max-replicas-binding}
+spec:
+  policyName: max-replicas
+  validationActions: [Deny]
+  matchResources:
+    namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: lab}}

@@ -1,0 +1,11 @@
+# kubectl taint nodes <node> dedicated=gpu:NoSchedule
+apiVersion: v1
+kind: Pod
+metadata: {name: tolerant-pod, namespace: lab}
+spec:
+  tolerations:
+    - {key: dedicated, operator: Equal, value: gpu, effect: NoSchedule}
+    # tolerate node going NotReady for 60s instead of default 300s
+    - {key: node.kubernetes.io/not-ready, operator: Exists, effect: NoExecute, tolerationSeconds: 60}
+  containers:
+    - {name: c, image: nginx:1.27}

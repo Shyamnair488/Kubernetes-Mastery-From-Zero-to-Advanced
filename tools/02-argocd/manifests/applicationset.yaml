@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata: {name: web-envs, namespace: argocd}
+spec:
+  generators:
+    - list:
+        elements:
+          - {env: dev, replicas: "1"}
+          - {env: prod, replicas: "3"}
+  template:
+    metadata: {name: "web-{{env}}"}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/<your-username>/k8s-mastery.git
+        targetRevision: main
+        path: 09-advanced/kustomize/overlays/{{env}}
+      destination: {server: https://kubernetes.default.svc, namespace: "{{env}}"}
+      syncPolicy:
+        automated: {prune: true, selfHeal: true}
+        syncOptions: [CreateNamespace=true]

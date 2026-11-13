@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: affinity-demo, namespace: lab}
+spec:
+  replicas: 3
+  selector: {matchLabels: {app: affinity-demo}}
+  template:
+    metadata: {labels: {app: affinity-demo}}
+    spec:
+      # nodeSelector: {disktype: ssd}        # simplest form
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 50
+              preference:
+                matchExpressions:
+                  - {key: disktype, operator: In, values: [ssd]}
+        podAntiAffinity:                # spread replicas across nodes
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels: {app: affinity-demo}
+      containers:
+        - {name: c, image: nginx:1.27}
+# NOTE: with 'required' anti-affinity you need >= 3 nodes, else Pods stay Pending (good lab!)

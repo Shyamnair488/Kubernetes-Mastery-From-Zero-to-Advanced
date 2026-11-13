@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-prod
+  namespace: argocd
+  finalizers: [resources-finalizer.argocd.argoproj.io]
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/<your-username>/k8s-mastery.git
+    targetRevision: main
+    path: projects/project-3-argocd-gitops/gitops/web/overlays/prod
+  destination: {server: https://kubernetes.default.svc, namespace: web-prod}
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true]

@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend-prod
+  namespace: lab
+  labels: {app: shop, tier: frontend, env: prod}
+  annotations:
+    owner: team-a
+    docs: https://example.com/shop
+spec:
+  containers:
+    - {name: c, image: nginx:1.27}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend-staging
+  namespace: lab
+  labels: {app: shop, tier: backend, env: staging}
+spec:
+  containers:
+    - {name: c, image: nginx:1.27}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: db-prod
+  namespace: lab
+  labels: {app: shop, tier: db, env: prod}
+spec:
+  containers:
+    - {name: c, image: nginx:1.27}
+# Try: kubectl get pods -n lab -l 'env in (prod),tier!=db'

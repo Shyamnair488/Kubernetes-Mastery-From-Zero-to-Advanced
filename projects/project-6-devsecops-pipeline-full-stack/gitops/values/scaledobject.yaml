@@ -1,0 +1,18 @@
+# Deployed by ArgoCD (directory source) - scales the Helm-released Deployment "kubelab-web"
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: {name: kubelab-web, namespace: kubelab}
+spec:
+  scaleTargetRef: {name: kubelab-web}
+  minReplicaCount: 2
+  maxReplicaCount: 30
+  triggers:
+    - type: cpu
+      metricType: Utilization
+      metadata: {value: "60"}
+    - type: cron
+      metadata:
+        timezone: Asia/Kolkata
+        start: 0 9 * * 1-5
+        end: 0 19 * * 1-5
+        desiredReplicas: "4"

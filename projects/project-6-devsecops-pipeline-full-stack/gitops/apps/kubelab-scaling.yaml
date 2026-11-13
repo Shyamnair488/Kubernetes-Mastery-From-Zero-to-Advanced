@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubelab-scaling
+  namespace: argocd
+  annotations: {argocd.argoproj.io/sync-wave: "2"}      # after KEDA CRDs and the app exist
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/<your-username>/k8s-mastery.git
+    targetRevision: main
+    path: projects/project-6-devsecops-pipeline-full-stack/gitops/values
+    directory: {include: "scaledobject.yaml"}
+  destination: {server: https://kubernetes.default.svc, namespace: kubelab}
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [SkipDryRunOnMissingResource=true]
