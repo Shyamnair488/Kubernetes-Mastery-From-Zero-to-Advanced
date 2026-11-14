@@ -10,6 +10,7 @@ Do these **after** the core modules (00–10).
 | 4 | [Trivy](04-trivy) | vulnerability/misconfig scanning | Docker / CLI |
 | 5 | [KEDA](05-keda) | event-driven **pod** autoscaling | any cluster |
 | 6 | [Karpenter](06-karpenter) | just-in-time **node** autoscaling | AWS EKS |
+| 7 | [Kubeadm](07-Kubeadm) | self-managed Kubernetes cluster setup | AWS / Linux |
 
 ```mermaid
 flowchart LR
